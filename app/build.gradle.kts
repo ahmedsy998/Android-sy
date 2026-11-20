@@ -1,5 +1,69 @@
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
 import groovy.json.JsonSlurper
+import java.io.File
+import java.util.Base64
+import org.gradle.api.DefaultTask
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.TaskAction
+
+abstract class EnsureDebugKeystoreTask : DefaultTask() {
+  @get:Internal abstract val keystoreFile: RegularFileProperty
+  @get:Internal abstract val base64KeystoreFile: RegularFileProperty
+
+  @TaskAction
+  fun ensureKeystore() {
+    val target = keystoreFile.get().asFile
+    if (target.exists() && target.length() > 0L) {
+      return
+    }
+    target.parentFile?.mkdirs()
+
+    val base64Source = base64KeystoreFile.get().asFile
+    if (base64Source.exists() && base64Source.length() > 0L) {
+      val cleaned = base64Source.readText().replace(Regex("\\s+"), "")
+      target.writeBytes(Base64.getDecoder().decode(cleaned))
+      return
+    }
+
+    val javaHome = System.getProperty("java.home")
+    val isWindows = System.getProperty("os.name").lowercase().contains("win")
+    val keytoolName = if (isWindows) "keytool.exe" else "keytool"
+    val keytoolFile = File(File(javaHome, "bin"), keytoolName)
+    val keytoolCmd = if (keytoolFile.exists()) keytoolFile.absolutePath else keytoolName
+
+    val process =
+      ProcessBuilder(
+          keytoolCmd,
+          "-genkeypair",
+          "-noprompt",
+          "-keystore",
+          target.absolutePath,
+          "-storepass",
+          "android",
+          "-alias",
+          "androiddebugkey",
+          "-keypass",
+          "android",
+          "-keyalg",
+          "RSA",
+          "-keysize",
+          "2048",
+          "-validity",
+          "10000",
+          "-dname",
+          "CN=Android Debug,O=Android,C=US",
+        )
+        .redirectErrorStream(true)
+        .start()
+
+    val output = process.inputStream.bufferedReader().readText()
+    val exitCode = process.waitFor()
+    if (exitCode != 0 || !target.exists()) {
+      error("Failed to generate standard Android debug keystore (exit $exitCode): $output")
+    }
+  }
+}
 
 @Suppress("UNCHECKED_CAST")
 fun resolveGoogleServicesWebClientId(rawJson: String?, targetPackageName: String): String {
@@ -117,6 +181,17 @@ secrets {
 }
 
 googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.WARN }
+
+val ensureDebugKeystore =
+  tasks.register<EnsureDebugKeystoreTask>("ensureDebugKeystore") {
+    keystoreFile.set(rootProject.layout.projectDirectory.file("debug.keystore"))
+    base64KeystoreFile.set(rootProject.layout.projectDirectory.file("debug.keystore.base64"))
+    outputs.upToDateWhen { keystoreFile.get().asFile.exists() }
+  }
+
+tasks.matching { it.name == "validateSigningDebug" || it.name == "packageDebug" }.configureEach {
+  dependsOn(ensureDebugKeystore)
+}
 
 // Some unused dependencies are commented out below instead of being removed.
 // This makes it easy to add them back in the future if needed.

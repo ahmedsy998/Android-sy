@@ -31,11 +31,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ScreenShare
 import androidx.compose.material.icons.filled.CameraFront
 import androidx.compose.material.icons.filled.CameraRear
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.filled.ScreenShare
 import androidx.compose.material.icons.filled.StopCircle
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -376,7 +376,7 @@ fun CommandCenterScreen(
                 CommandActionTile(
                     title = strings.screenSharingSession,
                     subtitle = "Android MediaProjection · System confirmation & ongoing notification",
-                    icon = Icons.Filled.ScreenShare,
+                    icon = Icons.AutoMirrored.Filled.ScreenShare,
                     accent = SentinelPalette.ElectricBlue,
                     enabled = selectedDevice?.screenShareAllowed == true,
                     disabledReason = "Enable Screen Share permission in Device Manager",

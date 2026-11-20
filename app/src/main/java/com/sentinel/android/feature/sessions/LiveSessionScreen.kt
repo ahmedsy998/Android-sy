@@ -25,10 +25,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ScreenShare
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.ScreenShare
 import androidx.compose.material.icons.filled.StopCircle
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.Button
@@ -243,7 +243,7 @@ fun LiveSessionScreen(
                                         modifier = Modifier.padding(20.dp)
                                     ) {
                                         Icon(
-                                            Icons.Filled.ScreenShare,
+                                            Icons.AutoMirrored.Filled.ScreenShare,
                                             contentDescription = null,
                                             tint = SentinelPalette.CyanAccent,
                                             modifier = Modifier.size(46.dp)

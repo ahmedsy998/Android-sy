@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">Android Sentinel</string>
+    <string name="sentinel_tagline">إدارة الأجهزة بموافقة صريحة ومراقبة شفافة</string>
+    <string name="nav_dashboard">لوحة التحكم</string>
+    <string name="nav_devices">الأجهزة</string>
+    <string name="nav_command">الأوامر</string>
+    <string name="nav_studio">الاستوديو</string>
+    <string name="nav_security">الأمان</string>
+    <string name="auth_title">أندرويد سنتينل</string>
+    <string name="auth_subtitle">منصة إدارة أجهزة قائمة على الموافقة الصريحة والشفافية الكاملة</string>
+    <string name="auth_google_button">تسجيل الدخول عبر Google</string>
+    <string name="auth_biometric_title">التحقق من هوية المشغل</string>
+    <string name="auth_biometric_subtitle">تحقق من هويتك للوصول إلى الأجهزة المسجلة والجلسات النشطة</string>
+    <string name="auth_biometric_cancel">إلغاء</string>
+    <string name="dashboard_title">نظرة عامة على العمليات</string>
+    <string name="devices_title">إدارة الأجهزة</string>
+    <string name="enrollment_title">تسجيل جهاز جديد</string>
+    <string name="command_title">مركز الأوامر المصرح بها</string>
+    <string name="live_session_title">جلسة مباشرة مصرح بها</string>
+    <string name="media_studio_title">استوديو الوسائط</string>
+    <string name="security_title">مركز الأمان</string>
+    <string name="activity_logs_title">سجلات النشاط والتدقيق</string>
+    <string name="settings_title">التفضيلات واللغة</string>
+    <string name="notification_channel_screen_share">مشاركة الشاشة النشطة</string>
+    <string name="notification_screen_share_title">مشاركة الشاشة نشطة في Android Sentinel</string>
+    <string name="notification_screen_share_body">تتم مشاركة شاشتك بشكل مرئي وبموافقة صريحة. يمكنك الإيقاف فوراً في أي وقت.</string>
+    <string name="action_stop_session">إيقاف الجلسة</string>
+    <string name="offline_banner">وضع عدم الاتصال — عرض الذاكرة المحلية المشفرة. ستتم المزامنة عند استعادة الاتصال.</string>
+    <string name="transparency_notice">تتطلب جميع جلسات المراقبة موافقة صريحة ومرئية من مالك الجهاز مع مؤشرات حالة نشطة.</string>
+</resources>

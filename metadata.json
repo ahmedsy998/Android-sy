@@ -1,0 +1,6 @@
+{
+  "name": "Android Sentinel",
+  "description": "Consent-based remote device management and transparent monitoring platform with Firebase sync, MediaProjection screen sharing, CameraX sessions, and Media Studio.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

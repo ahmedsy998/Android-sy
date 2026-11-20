@@ -1,0 +1,290 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- HARDENED GLOBAL HELPERS ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidStringList(listVal, maxLen) {
+      return listVal is list &&
+             listVal.size() <= maxLen &&
+             (listVal.size() == 0 || listVal[0] is string);
+    }
+
+    // --- ENTITY VALIDATION BLUEPRINTS ---
+
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll([
+               'userId', 'displayName', 'email', 'biometricEnabled',
+               'sessionTimeoutMinutes', 'createdAt', 'updatedAt'
+             ]) &&
+             data.keys().hasOnly([
+               'userId', 'displayName', 'email', 'biometricEnabled',
+               'sessionTimeoutMinutes', 'createdAt', 'updatedAt'
+             ]) &&
+             data.userId is string && data.userId == userId &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+             data.email is string && data.email.size() <= 120 &&
+             data.biometricEnabled is bool &&
+             data.sessionTimeoutMinutes is int && data.sessionTimeoutMinutes >= 5 && data.sessionTimeoutMinutes <= 1440 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidEnrolledDevice(data, userId) {
+      return data.keys().hasAll([
+               'userId', 'deviceAlias', 'deviceModel', 'androidVersion', 'enrollmentCode',
+               'connectionStatus', 'consentVerified', 'cameraAllowed', 'screenShareAllowed',
+               'mediaPickerAllowed', 'filesAllowed', 'enrolledAt', 'lastActivityAt', 'updatedAt'
+             ]) &&
+             data.keys().hasOnly([
+               'userId', 'deviceAlias', 'deviceModel', 'androidVersion', 'enrollmentCode',
+               'connectionStatus', 'consentVerified', 'cameraAllowed', 'screenShareAllowed',
+               'mediaPickerAllowed', 'filesAllowed', 'enrolledAt', 'lastActivityAt', 'updatedAt'
+             ]) &&
+             data.userId is string && data.userId == userId &&
+             data.deviceAlias is string && data.deviceAlias.size() >= 1 && data.deviceAlias.size() <= 60 &&
+             data.deviceModel is string && data.deviceModel.size() >= 1 && data.deviceModel.size() <= 80 &&
+             data.androidVersion is string && data.androidVersion.size() >= 1 && data.androidVersion.size() <= 40 &&
+             data.enrollmentCode is string && data.enrollmentCode.size() >= 4 && data.enrollmentCode.size() <= 32 &&
+             data.connectionStatus in ['ONLINE', 'OFFLINE', 'REVOKED'] &&
+             data.consentVerified is bool &&
+             data.cameraAllowed is bool &&
+             data.screenShareAllowed is bool &&
+             data.mediaPickerAllowed is bool &&
+             data.filesAllowed is bool &&
+             data.enrolledAt is timestamp && data.enrolledAt <= request.time &&
+             data.lastActivityAt is timestamp && data.lastActivityAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidEnrollmentRequest(data, userId) {
+      return data.keys().hasAll([
+               'userId', 'enrollmentCode', 'targetAlias', 'requestedPermissions',
+               'status', 'deviceModel', 'androidVersion', 'createdAt', 'updatedAt'
+             ]) &&
+             data.keys().hasOnly([
+               'userId', 'enrollmentCode', 'targetAlias', 'requestedPermissions',
+               'status', 'deviceModel', 'androidVersion', 'createdAt', 'updatedAt'
+             ]) &&
+             data.userId is string && data.userId == userId &&
+             data.enrollmentCode is string && data.enrollmentCode.size() >= 4 && data.enrollmentCode.size() <= 32 &&
+             data.targetAlias is string && data.targetAlias.size() >= 1 && data.targetAlias.size() <= 60 &&
+             isValidStringList(data.requestedPermissions, 10) &&
+             data.status in ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED', 'EXPIRED'] &&
+             data.deviceModel is string && data.deviceModel.size() <= 80 &&
+             data.androidVersion is string && data.androidVersion.size() <= 40 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidMonitoringSession(data, userId) {
+      return data.keys().hasAll([
+               'userId', 'deviceId', 'deviceAlias', 'sessionType', 'status',
+               'participantName', 'connectionQuality', 'consentGranted',
+               'activePermissions', 'sharedItemSummary', 'startedAt', 'updatedAt'
+             ]) &&
+             data.keys().hasOnly([
+               'userId', 'deviceId', 'deviceAlias', 'sessionType', 'status',
+               'participantName', 'connectionQuality', 'consentGranted',
+               'activePermissions', 'sharedItemSummary', 'startedAt', 'updatedAt', 'endedAt'
+             ]) &&
+             data.userId is string && data.userId == userId &&
+             isValidId(data.deviceId) &&
+             data.deviceAlias is string && data.deviceAlias.size() >= 1 && data.deviceAlias.size() <= 60 &&
+             data.sessionType in ['SCREEN_SHARE', 'FRONT_CAMERA', 'REAR_CAMERA', 'MEDIA_SHARE', 'FILE_SHARE'] &&
+             data.status in ['AWAITING_CONSENT', 'ACTIVE', 'PAUSED', 'TERMINATED'] &&
+             data.participantName is string && data.participantName.size() >= 1 && data.participantName.size() <= 80 &&
+             data.connectionQuality in ['EXCELLENT', 'GOOD', 'FAIR', 'OFFLINE'] &&
+             data.consentGranted is bool &&
+             isValidStringList(data.activePermissions, 10) &&
+             data.sharedItemSummary is string && data.sharedItemSummary.size() <= 240 &&
+             data.startedAt is timestamp && data.startedAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time &&
+             (!('endedAt' in data) || (data.endedAt is timestamp && data.endedAt <= request.time));
+    }
+
+    function isValidActivityLog(data, userId) {
+      return data.keys().hasAll([
+               'userId', 'category', 'action', 'details', 'severity',
+               'deviceId', 'sessionId', 'createdAt'
+             ]) &&
+             data.keys().hasOnly([
+               'userId', 'category', 'action', 'details', 'severity',
+               'deviceId', 'sessionId', 'createdAt'
+             ]) &&
+             data.userId is string && data.userId == userId &&
+             data.category in ['ENROLLMENT', 'CONSENT', 'PERMISSION', 'SESSION', 'DATA_SHARE', 'AUTH', 'SECURITY', 'MEDIA_STUDIO'] &&
+             data.action is string && data.action.size() >= 1 && data.action.size() <= 100 &&
+             data.details is string && data.details.size() >= 1 && data.details.size() <= 400 &&
+             data.severity in ['INFO', 'SUCCESS', 'WARNING', 'CRITICAL'] &&
+             data.deviceId is string && data.deviceId.size() <= 128 &&
+             data.sessionId is string && data.sessionId.size() <= 128 &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    // --- COLLECTION RULES ---
+
+    match /users/{userId} {
+      // PII isolated strictly to owner
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidUserProfile(incoming(), userId);
+
+      allow update: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidUserProfile(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'displayName', 'email', 'biometricEnabled', 'sessionTimeoutMinutes', 'updatedAt'
+                       ]);
+
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      // Enrolled Devices subcollection
+      match /devices/{deviceId} {
+        allow get: if isOwner(userId) && isValidId(deviceId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(deviceId) &&
+                         isValidEnrolledDevice(incoming(), userId);
+
+        allow update: if isOwner(userId) &&
+                         isValidId(deviceId) &&
+                         isValidEnrolledDevice(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().enrolledAt == existing().enrolledAt &&
+                         incoming().enrollmentCode == existing().enrollmentCode &&
+                         (
+                           // Action: Update alias, permissions, or heartbeat
+                           (
+                             existing().connectionStatus != 'REVOKED' &&
+                             incoming().diff(existing()).affectedKeys().hasOnly([
+                               'deviceAlias', 'connectionStatus', 'cameraAllowed', 'screenShareAllowed',
+                               'mediaPickerAllowed', 'filesAllowed', 'lastActivityAt', 'updatedAt'
+                             ])
+                           ) ||
+                           // Action: Revoke device permanently
+                           (
+                             incoming().connectionStatus == 'REVOKED' &&
+                             incoming().diff(existing()).affectedKeys().hasOnly([
+                               'connectionStatus', 'cameraAllowed', 'screenShareAllowed',
+                               'mediaPickerAllowed', 'filesAllowed', 'updatedAt'
+                             ])
+                           )
+                         );
+
+        allow delete: if isOwner(userId) && isValidId(deviceId);
+      }
+
+      // Enrollment Requests subcollection
+      match /enrollments/{enrollmentId} {
+        allow get: if isOwner(userId) && isValidId(enrollmentId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(enrollmentId) &&
+                         isValidEnrollmentRequest(incoming(), userId) &&
+                         incoming().status == 'PENDING';
+
+        allow update: if isOwner(userId) &&
+                         isValidId(enrollmentId) &&
+                         isValidEnrollmentRequest(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().enrollmentCode == existing().enrollmentCode &&
+                         // Terminal state lock: only PENDING invitations can transition
+                         existing().status == 'PENDING' &&
+                         incoming().status in ['APPROVED', 'REJECTED', 'CANCELLED', 'EXPIRED'] &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'status', 'deviceModel', 'androidVersion', 'updatedAt'
+                         ]);
+
+        allow delete: if isOwner(userId) && isValidId(enrollmentId);
+      }
+
+      // Authorized Monitoring Sessions subcollection
+      match /sessions/{sessionId} {
+        allow get: if isOwner(userId) && isValidId(sessionId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(sessionId) &&
+                         isValidMonitoringSession(incoming(), userId) &&
+                         incoming().status in ['AWAITING_CONSENT', 'ACTIVE'] &&
+                         exists(/databases/$(database)/documents/users/$(userId)/devices/$(incoming().deviceId));
+
+        allow update: if isOwner(userId) &&
+                         isValidId(sessionId) &&
+                         isValidMonitoringSession(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().deviceId == existing().deviceId &&
+                         incoming().sessionType == existing().sessionType &&
+                         incoming().startedAt == existing().startedAt &&
+                         // Terminal state lock: TERMINATED sessions are immutable
+                         existing().status != 'TERMINATED' &&
+                         (
+                           // Action: Approve consent / pause / resume / update connection or shared summary
+                           (
+                             incoming().status in ['ACTIVE', 'PAUSED'] &&
+                             incoming().diff(existing()).affectedKeys().hasOnly([
+                               'status', 'consentGranted', 'connectionQuality',
+                               'activePermissions', 'sharedItemSummary', 'updatedAt'
+                             ])
+                           ) ||
+                           // Action: Terminate session immediately
+                           (
+                             incoming().status == 'TERMINATED' &&
+                             incoming().diff(existing()).affectedKeys().hasOnly([
+                               'status', 'connectionQuality', 'activePermissions', 'updatedAt', 'endedAt'
+                             ])
+                           )
+                         );
+
+        allow delete: if isOwner(userId) && isValidId(sessionId);
+      }
+
+      // Immutable Activity Audit Logs subcollection
+      match /activity_logs/{logId} {
+        allow get: if isOwner(userId) && isValidId(logId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(logId) &&
+                         isValidActivityLog(incoming(), userId);
+
+        // Audit logs are strictly append-only (no tampering)
+        allow update: if false;
+        allow delete: if isOwner(userId) && isValidId(logId);
+      }
+    }
+  }
+}

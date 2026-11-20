@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">Android Sentinel</string>
+    <string name="sentinel_tagline">Consent-First Device Management &amp; Transparent Telemetry</string>
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_devices">Devices</string>
+    <string name="nav_command">Command</string>
+    <string name="nav_studio">Studio</string>
+    <string name="nav_security">Security</string>
+    <string name="auth_title">ANDROID SENTINEL</string>
+    <string name="auth_subtitle">Zero-trust, owner-consented device management platform</string>
+    <string name="auth_google_button">Sign in with Google</string>
+    <string name="auth_biometric_title">Sentinel Operator Verification</string>
+    <string name="auth_biometric_subtitle">Verify your identity to access enrolled devices and active sessions</string>
+    <string name="auth_biometric_cancel">Cancel</string>
+    <string name="dashboard_title">Operations Overview</string>
+    <string name="devices_title">Device Manager</string>
+    <string name="enrollment_title">Device Enrollment</string>
+    <string name="command_title">Authorized Command Center</string>
+    <string name="live_session_title">Live Consent Session</string>
+    <string name="media_studio_title">Media Studio</string>
+    <string name="security_title">Security Center</string>
+    <string name="activity_logs_title">Activity Audit Logs</string>
+    <string name="settings_title">Preferences &amp; Locale</string>
+    <string name="notification_channel_screen_share">Active Screen Share</string>
+    <string name="notification_screen_share_title">Android Sentinel Screen Share Active</string>
+    <string name="notification_screen_share_body">Your screen is visibly shared with explicit consent. Tap Stop at any time.</string>
+    <string name="action_stop_session">Stop Session</string>
+    <string name="offline_banner">Offline Mode — Showing encrypted local Room cache. Changes sync when reconnected.</string>
+    <string name="transparency_notice">All monitoring sessions require visible, explicit owner approval and display active status indicators.</string>
+</resources>

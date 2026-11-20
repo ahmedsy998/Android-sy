@@ -1,0 +1,299 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated Sentinel operator profile and security preferences.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the owner."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Operator display name."
+        },
+        "email": {
+          "type": "string",
+          "description": "Verified operator email address (owner-private PII)."
+        },
+        "biometricEnabled": {
+          "type": "boolean",
+          "description": "Whether biometric lock is enabled for sensitive actions."
+        },
+        "sessionTimeoutMinutes": {
+          "type": "integer",
+          "description": "Automatic session expiration duration in minutes."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp()) when profile was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp()) of last update."
+        }
+      },
+      "required": ["userId", "displayName", "email", "biometricEnabled", "sessionTimeoutMinutes", "createdAt", "updatedAt"]
+    },
+    "EnrolledDevice": {
+      "title": "EnrolledDevice",
+      "description": "An Android device explicitly enrolled with owner consent.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner UID."
+        },
+        "deviceAlias": {
+          "type": "string",
+          "description": "Human-friendly alias assigned to the device."
+        },
+        "deviceModel": {
+          "type": "string",
+          "description": "Hardware manufacturer and model string."
+        },
+        "androidVersion": {
+          "type": "string",
+          "description": "Android OS release version."
+        },
+        "enrollmentCode": {
+          "type": "string",
+          "description": "One-time enrollment code used to pair the device."
+        },
+        "connectionStatus": {
+          "type": "string",
+          "enum": ["ONLINE", "OFFLINE", "REVOKED"],
+          "description": "Current device connectivity or revocation state."
+        },
+        "consentVerified": {
+          "type": "boolean",
+          "description": "Explicit owner consent verification flag."
+        },
+        "cameraAllowed": {
+          "type": "boolean",
+          "description": "Consent flag for visible camera sessions."
+        },
+        "screenShareAllowed": {
+          "type": "boolean",
+          "description": "Consent flag for MediaProjection screen sharing."
+        },
+        "mediaPickerAllowed": {
+          "type": "boolean",
+          "description": "Consent flag for Android Photo Picker sharing."
+        },
+        "filesAllowed": {
+          "type": "boolean",
+          "description": "Consent flag for Storage Access Framework file sharing."
+        },
+        "enrolledAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp()) when device was enrolled."
+        },
+        "lastActivityAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp()) of most recent device heartbeat."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp()) of last modification."
+        }
+      },
+      "required": [
+        "userId", "deviceAlias", "deviceModel", "androidVersion", "enrollmentCode",
+        "connectionStatus", "consentVerified", "cameraAllowed", "screenShareAllowed",
+        "mediaPickerAllowed", "filesAllowed", "enrolledAt", "lastActivityAt", "updatedAt"
+      ]
+    },
+    "EnrollmentRequest": {
+      "title": "EnrollmentRequest",
+      "description": "Audited consent-based device enrollment invitation and decision record.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner UID."
+        },
+        "enrollmentCode": {
+          "type": "string",
+          "description": "Unique enrollment verification code."
+        },
+        "targetAlias": {
+          "type": "string",
+          "description": "Proposed alias for the enrolling device."
+        },
+        "requestedPermissions": {
+          "type": "array",
+          "description": "Bounded list of requested consent scopes."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["PENDING", "APPROVED", "REJECTED", "CANCELLED", "EXPIRED"],
+          "description": "Lifecycle state of the enrollment invitation."
+        },
+        "deviceModel": {
+          "type": "string",
+          "description": "Enrolling device hardware model."
+        },
+        "androidVersion": {
+          "type": "string",
+          "description": "Enrolling device Android version."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp()) when created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp()) when updated."
+        }
+      },
+      "required": [
+        "userId", "enrollmentCode", "targetAlias", "requestedPermissions",
+        "status", "deviceModel", "androidVersion", "createdAt", "updatedAt"
+      ]
+    },
+    "MonitoringSession": {
+      "title": "MonitoringSession",
+      "description": "Transparent user-approved monitoring or media sharing session.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner UID."
+        },
+        "deviceId": {
+          "type": "string",
+          "description": "ID of the enrolled device participating in this session."
+        },
+        "deviceAlias": {
+          "type": "string",
+          "description": "Display alias of the participating device."
+        },
+        "sessionType": {
+          "type": "string",
+          "enum": ["SCREEN_SHARE", "FRONT_CAMERA", "REAR_CAMERA", "MEDIA_SHARE", "FILE_SHARE"],
+          "description": "Explicit session capability being used."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["AWAITING_CONSENT", "ACTIVE", "PAUSED", "TERMINATED"],
+          "description": "Current session lifecycle state."
+        },
+        "participantName": {
+          "type": "string",
+          "description": "Identity of the authorized session participant."
+        },
+        "connectionQuality": {
+          "type": "string",
+          "enum": ["EXCELLENT", "GOOD", "FAIR", "OFFLINE"],
+          "description": "Current transport connection quality indicator."
+        },
+        "consentGranted": {
+          "type": "boolean",
+          "description": "Whether explicit user consent was confirmed."
+        },
+        "activePermissions": {
+          "type": "array",
+          "description": "Bounded list of active transparent permission indicators."
+        },
+        "sharedItemSummary": {
+          "type": "string",
+          "description": "Description of explicitly shared photo, video, or SAF document."
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp()) when session started."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp()) of last session state change."
+        },
+        "endedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Optional server timestamp (FieldValue.serverTimestamp()) when terminated."
+        }
+      },
+      "required": [
+        "userId", "deviceId", "deviceAlias", "sessionType", "status",
+        "participantName", "connectionQuality", "consentGranted",
+        "activePermissions", "sharedItemSummary", "startedAt", "updatedAt"
+      ]
+    },
+    "ActivityLog": {
+      "title": "ActivityLog",
+      "description": "Immutable audit record of enrollment, consent, permission, session, and auth events.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner UID."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["ENROLLMENT", "CONSENT", "PERMISSION", "SESSION", "DATA_SHARE", "AUTH", "SECURITY", "MEDIA_STUDIO"],
+          "description": "Audit event category."
+        },
+        "action": {
+          "type": "string",
+          "description": "Concise event title."
+        },
+        "details": {
+          "type": "string",
+          "description": "Human-readable audit event details."
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["INFO", "SUCCESS", "WARNING", "CRITICAL"],
+          "description": "Event severity badge."
+        },
+        "deviceId": {
+          "type": "string",
+          "description": "Related device ID if applicable."
+        },
+        "sessionId": {
+          "type": "string",
+          "description": "Related session ID if applicable."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp (FieldValue.serverTimestamp()) when recorded."
+        }
+      },
+      "required": ["userId", "category", "action", "details", "severity", "deviceId", "sessionId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Owner-isolated operator profile and security settings."
+    },
+    "/users/{userId}/devices/{deviceId}": {
+      "schema": { "$ref": "#/entities/EnrolledDevice" },
+      "description": "Enrolled devices owned by the authenticated user."
+    },
+    "/users/{userId}/enrollments/{enrollmentId}": {
+      "schema": { "$ref": "#/entities/EnrollmentRequest" },
+      "description": "Audited device enrollment invitations and consent records."
+    },
+    "/users/{userId}/sessions/{sessionId}": {
+      "schema": { "$ref": "#/entities/MonitoringSession" },
+      "description": "User-approved live monitoring and media sharing sessions."
+    },
+    "/users/{userId}/activity_logs/{logId}": {
+      "schema": { "$ref": "#/entities/ActivityLog" },
+      "description": "Immutable security and transparency audit trail."
+    }
+  }
+}

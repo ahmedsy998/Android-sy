@@ -1,4 +1,34 @@
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
+import groovy.json.JsonSlurper
+
+@Suppress("UNCHECKED_CAST")
+fun resolveGoogleServicesWebClientId(rawJson: String?, targetPackageName: String): String {
+  if (rawJson.isNullOrBlank()) return ""
+  return runCatching {
+    val root = JsonSlurper().parseText(rawJson) as? Map<String, Any?> ?: return ""
+    val clients = root["client"] as? List<Map<String, Any?>> ?: return ""
+    val matchingClient =
+      clients.firstOrNull { client ->
+        val clientInfo = client["client_info"] as? Map<String, Any?>
+        val androidInfo = clientInfo?.get("android_client_info") as? Map<String, Any?>
+        androidInfo?.get("package_name") == targetPackageName
+      } ?: return ""
+
+    val oauthClients = matchingClient["oauth_client"] as? List<Map<String, Any?>> ?: emptyList()
+    val directWebClient =
+      oauthClients.firstOrNull { (it["client_type"] as? Number)?.toInt() == 3 }?.get("client_id")
+        as? String
+    if (!directWebClient.isNullOrBlank()) return directWebClient
+
+    val services = matchingClient["services"] as? Map<String, Any?>
+    val appInvite = services?.get("appinvite_service") as? Map<String, Any?>
+    val otherClients =
+      appInvite?.get("other_platform_oauth_client") as? List<Map<String, Any?>> ?: emptyList()
+    (otherClients.firstOrNull { (it["client_type"] as? Number)?.toInt() == 3 }?.get("client_id")
+        as? String)
+      .orEmpty()
+  }.getOrDefault("")
+}
 
 plugins {
   alias(libs.plugins.android.application)
@@ -20,6 +50,14 @@ android {
     versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+    val googleServicesJsonText =
+      providers.fileContents(layout.projectDirectory.file("google-services.json")).asText.orNull
+    val resolvedWebClientId =
+      resolveGoogleServicesWebClientId(googleServicesJsonText, "com.aistudio.sentinel.k8m4px")
+        .replace("\\", "\\\\")
+        .replace("\"", "\\\"")
+    buildConfigField("String", "DEFAULT_WEB_CLIENT_ID", "\"$resolvedWebClientId\"")
   }
 
   // Do not remove or modify these signingConfigs. They are necessary for building, installing,

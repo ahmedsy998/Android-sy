@@ -72,4 +72,14 @@ class SentinelCoreUnitTest {
         assertEquals(LogSeverity.INFO, log.severityEnum())
         assertEquals(EnrollmentStatus.PENDING, EnrollmentStatus.fromRaw("UNKNOWN"))
     }
+
+    @Test
+    fun `web client id resolver rejects blank values and trims configured values`() {
+        assertEquals(null, com.sentinel.android.feature.auth.resolveWebClientId(""))
+        assertEquals(null, com.sentinel.android.feature.auth.resolveWebClientId("   "))
+        assertEquals(
+            "configured-client-id",
+            com.sentinel.android.feature.auth.resolveWebClientId("  configured-client-id  ")
+        )
+    }
 }

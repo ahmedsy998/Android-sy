@@ -8,7 +8,7 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
-import com.example.R
+import com.example.BuildConfig
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -38,6 +38,10 @@ fun FirebaseAuth.authStateFlow(): Flow<FirebaseUser?> = callbackFlow {
     awaitClose { removeAuthStateListener(listener) }
 }
 
+internal fun resolveWebClientId(
+    configuredClientId: String = BuildConfig.DEFAULT_WEB_CLIENT_ID
+): String? = configuredClientId.trim().takeIf { it.isNotEmpty() }
+
 /**
  * Silent startup restoration using GetGoogleIdOption (one credential option per request).
  */
@@ -52,9 +56,9 @@ fun attemptAutoSignIn(
         onAuthSuccess()
         return
     }
-    val clientId = try {
-        context.getString(R.string.default_web_client_id)
-    } catch (_: Exception) {
+    val clientId = resolveWebClientId()
+    if (clientId == null) {
+        Log.w(AUTH_TAG, "Skipping auto sign-in: Web OAuth client ID not configured in google-services.json.")
         onUnauthenticated()
         return
     }
@@ -97,10 +101,9 @@ fun onGoogleSignInClicked(
     scope: CoroutineScope,
     onAuthCancelled: () -> Unit = {}
 ) {
-    val clientId = try {
-        context.getString(R.string.default_web_client_id)
-    } catch (_: Exception) {
-        onAuthError("Google Sign-In configuration missing: default_web_client_id not found.")
+    val clientId = resolveWebClientId()
+    if (clientId == null) {
+        onAuthError("Google Sign-In is not configured. Provide app/google-services.json with a Web OAuth client ID.")
         return
     }
     val activity = context as? Activity
